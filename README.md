@@ -1,4 +1,4 @@
-<img width="760" height="760" alt="invoker-render" src="https://github.com/user-attachments/assets/380731e0-bb08-4af2-acd2-4b73daa98bdb" />
+<img width="360" height="360" alt="invoker-render" src="https://github.com/user-attachments/assets/59967228-1325-4c5d-9b43-238bbbc80076" />
 
 # Тренажёр Инвокера
 
