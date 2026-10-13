@@ -125,7 +125,13 @@ body{margin:0;background:var(--bg);color:var(--fg);
 /* ---------- stage ---------- */
 .stage{width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
 .target{display:flex;flex-direction:column;align-items:center;gap:9px;padding:20px 24px;border-radius:18px;width:100%;
+  position:relative;
   background:radial-gradient(420px 220px at 50% 0%,rgba(233,181,88,.09),transparent 70%),var(--panel);border:1px solid var(--line)}
+.target::before,.target::after{content:"";position:absolute;width:20px;height:20px;border:1px solid rgba(233,181,88,.4);pointer-events:none}
+.target::before{top:9px;left:9px;border-right:0;border-bottom:0;border-radius:6px 0 0 0}
+.target::after{bottom:9px;right:9px;border-left:0;border-top:0;border-radius:0 0 6px 0}
+.target.bad{border-color:rgba(255,77,94,.5);box-shadow:0 0 34px rgba(255,77,94,.16)}
+.target.good{border-color:rgba(125,255,168,.35)}
 .frame{width:108px;height:108px;flex:0 0 auto;border-radius:12px;padding:5px;position:relative;
   background:linear-gradient(145deg,#ffeec4,#8a5f1f 45%,#f4dda8 70%,#6b4a16);
   box-shadow:0 0 44px rgba(233,181,88,.32),inset 0 0 16px rgba(0,0,0,.6)}
@@ -153,12 +159,15 @@ body{margin:0;background:var(--bg);color:var(--fg);
 .chain-sep{color:var(--muted);font-size:14px;opacity:.5}
 .chain-name{font:600 12px/1 "Segoe UI",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 
-.queue-wrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.queue-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
 .queue-cap{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-.queue{display:flex;gap:10px;align-items:center;justify-content:center;padding:10px 14px;border-radius:14px;
+.queue{display:flex;gap:16px;align-items:center;justify-content:center;padding:10px 16px 16px;border-radius:14px;
   background:rgba(255,255,255,.025);border:1px dashed rgba(255,255,255,.1);min-height:80px}
 .slot{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;position:relative;
   background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)}
+.slot::after{content:attr(data-n);position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);
+  font:600 9px/1 ui-monospace,Consolas,monospace;color:var(--muted);opacity:0;transition:opacity .2s}
+.slot.filled::after{opacity:.6}
 .slot.filled{border-color:transparent;animation:pop .28s cubic-bezier(.2,1.5,.4,1)}
 .slot.filled img{width:46px;height:46px;border-radius:50%;position:relative;z-index:1}
 .slot.filled::before{content:"";position:absolute;inset:-7px;border-radius:50%;filter:blur(9px);opacity:.85}
@@ -185,6 +194,9 @@ body{margin:0;background:var(--bg);color:var(--fg);
 .orb-cap s{font:600 9px/1 "Segoe UI",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-decoration:none}
 .orb-btn.q .orb-cap b{color:var(--q)} .orb-btn.w .orb-cap b{color:var(--w)} .orb-btn.e .orb-cap b{color:var(--e)}
 
+.invoke-wrap{position:relative;display:grid;place-items:center}
+.invoke-ring{position:absolute;width:164px;height:164px;border-radius:50%;pointer-events:none;
+  border:1px dashed rgba(233,181,88,.22);animation:spin 26s linear infinite}
 .invoke{width:128px;height:128px;border-radius:50%;border:0;cursor:pointer;color:#221604;position:relative;
   display:grid;place-items:center;align-content:center;gap:2px;
   background:radial-gradient(circle at 50% 30%,#fff2cf,#e9b558 48%,#a9741a);
@@ -193,6 +205,9 @@ body{margin:0;background:var(--bg);color:var(--fg);
 .invoke kbd{font:700 26px/1 ui-monospace,Consolas,monospace;letter-spacing:0}
 .invoke:hover{box-shadow:0 0 0 2px rgba(255,230,176,.5),0 0 64px rgba(233,181,88,.5),inset 0 2px 0 rgba(255,255,255,.6)}
 .invoke.down{transform:scale(.95)}
+.invoke.ready{box-shadow:0 0 0 3px rgba(255,246,222,.75),0 0 70px rgba(233,181,88,.65),inset 0 2px 0 rgba(255,255,255,.7);
+  animation:ready 1.1s ease-in-out infinite}
+@keyframes ready{50%{box-shadow:0 0 0 6px rgba(255,246,222,.35),0 0 90px rgba(233,181,88,.8),inset 0 2px 0 rgba(255,255,255,.7)}}
 
 /* ---------- rail / halo / history ---------- */
 .stage,.hud{max-width:780px}
@@ -324,6 +339,14 @@ body{margin:0;background:var(--bg);color:var(--fg);
         </div>
       </div>
       <div class="set-row">
+        <span>Звук</span>
+        <div class="seg" id="segSound">
+          <button data-v="dota">Dota</button>
+          <button data-v="synth">Синтез</button>
+          <button data-v="off">Выкл</button>
+        </div>
+      </div>
+      <div class="set-row">
         <span>Очередь после Invoke</span>
         <div class="seg" id="segQueue">
           <button data-v="1">Сохранять</button>
@@ -391,15 +414,20 @@ body{margin:0;background:var(--bg);color:var(--fg);
       </div>
 
       <div class="queue-wrap">
-        <div class="queue" id="queue"><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
-        <div class="queue-cap">очередь сфер · fifo</div>
+        <div class="queue" id="queue">
+          <div class="slot" data-n="1"></div><div class="slot" data-n="2"></div><div class="slot" data-n="3"></div>
+        </div>
+        <div class="queue-cap">очередь сфер · 1 — самая старая</div>
       </div>
 
       <div class="controls">
         <button class="orb-btn q" data-orb="Q"><img alt="Quas"><span class="orb-cap"><b>Q</b><s>Quas</s></span></button>
         <button class="orb-btn w" data-orb="W"><img alt="Wex"><span class="orb-cap"><b>W</b><s>Wex</s></span></button>
         <button class="orb-btn e" data-orb="E"><img alt="Exort"><span class="orb-cap"><b>E</b><s>Exort</s></span></button>
-        <button class="invoke" id="btnInvoke" aria-label="Invoke"><kbd>R</kbd><span>INVOKE</span></button>
+        <div class="invoke-wrap">
+          <div class="invoke-ring"></div>
+          <button class="invoke" id="btnInvoke" aria-label="Invoke"><kbd>R</kbd><span>INVOKE</span></button>
+        </div>
       </div>
 
       <div class="history" id="history"></div>
@@ -481,12 +509,13 @@ const store = {
 
 /* ==================== НАСТРОЙКИ ==================== */
 const DEF_BINDS = {Q:'KeyQ', W:'KeyW', E:'KeyE', R:'KeyR'};
-const CFG = Object.assign({hints:0, keepQueue:true, sound:true, binds:null}, store.get('invoker_cfg', {}));
+const CFG = Object.assign({hints:0, keepQueue:true, soundPack:'dota', binds:null}, store.get('invoker_cfg', {}));
 CFG.binds = Object.assign({}, DEF_BINDS, CFG.binds || {});
 const saveCfg = () => store.set('invoker_cfg', CFG);
 
 let runs = store.get('invoker_runs', []);
-let endlessStats = store.get('invoker_endless', {casts:0, best:0, err:0});
+let stats = Object.assign({casts:0, err:0, bestStreak:0}, store.get('invoker_stats', {}));
+const saveStats = () => store.set('invoker_stats', stats);
 let spellBest = store.get('invoker_spell', {});
 
 function keyLabel(code){
@@ -514,21 +543,148 @@ let AC = null;
 function audioCtx(){ if(!AC){ AC = new (window.AudioContext||window.webkitAudioContext)(); } if(AC.state==='suspended'){ AC.resume(); } return AC; }
 function tone(freq, dur, type, vol, delay, slide){
   try{
-    if(!CFG.sound) return;
+    if(CFG.soundPack === 'off') return;
     const a = audioCtx(), t0 = a.currentTime + (delay||0);
     const o = a.createOscillator(), g = a.createGain();
     o.type = type||'sine'; o.frequency.setValueAtTime(freq, t0);
-    if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(60,freq+slide), t0+dur);
+    if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(40,freq+slide), t0+dur);
     g.gain.setValueAtTime(0.0001, t0);
     g.gain.exponentialRampToValueAtTime(vol||0.2, t0+0.012);
     g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
     o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0+dur+0.04);
   }catch(e){}
 }
-function sfxOrb(c){ tone(ORB_TONE[c], .12, 'triangle', .16, 0, -60); }
-function sfxGood(){ tone(660,.14,'sine',.17); tone(990,.22,'sine',.12,.07); tone(1320,.3,'triangle',.06,.13); }
-function sfxBad(){ tone(150,.26,'sawtooth',.14,0,-70); tone(96,.3,'square',.05,.02,-30); }
-function sfxFinish(){ [523,659,784,1046].forEach(function(f,i){ tone(f,.36,'triangle',.13,i*.1); }); }
+let NOISE = null;
+function noiseBuf(){
+  const a = audioCtx();
+  if(!NOISE){
+    NOISE = a.createBuffer(1, a.sampleRate*2, a.sampleRate);
+    const d = NOISE.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+  }
+  return NOISE;
+}
+function noise(dur, o){
+  try{
+    if(CFG.soundPack === 'off') return;
+    const a = audioCtx(), t0 = a.currentTime + (o.delay||0);
+    const src = a.createBufferSource(); src.buffer = noiseBuf(); src.loop = true;
+    const flt = a.createBiquadFilter();
+    flt.type = o.type || 'bandpass';
+    flt.frequency.setValueAtTime(o.freq, t0);
+    if(o.to) flt.frequency.exponentialRampToValueAtTime(o.to, t0+dur);
+    flt.Q.value = o.q || 1;
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(o.gain||0.08, t0+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    src.connect(flt); flt.connect(g); g.connect(a.destination);
+    src.start(t0); src.stop(t0+dur+0.05);
+  }catch(e){}
+}
+
+/* --- набор «Синтез»: чистые электронные блипы --- */
+const PACK_SYNTH = {
+  orb: {
+    Q: function(){ tone(ORB_TONE.Q, .12, 'triangle', .16, 0, -60); },
+    W: function(){ tone(ORB_TONE.W, .12, 'triangle', .16, 0, -60); },
+    E: function(){ tone(ORB_TONE.E, .12, 'triangle', .16, 0, -60); }
+  },
+  cast: function(){
+    tone(660,.14,'sine',.17); tone(990,.22,'sine',.12,.07); tone(1320,.3,'triangle',.06,.13);
+  },
+  err: function(){ tone(150,.26,'sawtooth',.14,0,-70); tone(96,.3,'square',.05,.02,-30); },
+  win: function(){ [523,659,784,1046].forEach(function(f,i){ tone(f,.36,'triangle',.13,i*.1); }); }
+};
+
+/* --- набор «Dota»: лёд, искра, огонь и свой голос у каждого заклинания --- */
+function castBase(){
+  tone(92,.45,'sine',.20,0,-42);
+  tone(330,.34,'triangle',.08,0,130);
+  tone(660,.55,'sine',.10,.02);
+  tone(990,.40,'sine',.05,.03);
+  noise(.32,{freq:520,q:.8,gain:.09,to:2400});
+}
+const CAST_VOICE = {
+  'cold-snap': function(){
+    tone(1900,.40,'sine',.11,0,-1250); tone(1250,.24,'sine',.06,.02,-800);
+    noise(.26,{freq:3400,q:1.5,gain:.05,to:900});
+  },
+  'emp': function(){
+    tone(1400,.20,'sawtooth',.08,0,-1150);
+    noise(.22,{freq:3000,q:1,gain:.10,to:520});
+    tone(70,.32,'sine',.18);
+  },
+  'sun-strike': function(){
+    tone(480,.28,'sine',.10,0,980);
+    noise(.34,{freq:900,q:.7,gain:.09,to:120,type:'lowpass',delay:.26});
+    tone(60,.52,'sine',.22,.26,-26);
+  },
+  'ghost-walk': function(){
+    noise(.52,{freq:1400,q:.6,gain:.055,type:'lowpass',to:480});
+    tone(420,.40,'sine',.05);
+  },
+  'ice-wall': function(){
+    tone(1500,.55,'sine',.07); tone(2100,.45,'sine',.055,.02); tone(2700,.35,'sine',.04,.04);
+    noise(.20,{freq:4000,q:2,gain:.05});
+  },
+  'tornado': function(){
+    noise(.75,{freq:300,q:.5,gain:.11,to:2200});
+    noise(.75,{freq:2400,q:.5,gain:.07,to:260});
+    tone(160,.40,'sine',.10,0,-60);
+  },
+  'alacrity': function(){
+    tone(500,.40,'triangle',.10,0,700);
+    tone(1200,.30,'sine',.06,.05);
+    noise(.30,{freq:3000,q:1.2,gain:.05,to:6000});
+  },
+  'forge-spirit': function(){
+    tone(520,.35,'sine',.10); tone(784,.28,'sine',.07,.01); tone(1046,.20,'sine',.05,.02);
+    noise(.08,{freq:2200,q:1,gain:.08});
+  },
+  'chaos-meteor': function(){
+    tone(70,.90,'sine',.20,0,-30);
+    noise(.80,{freq:260,q:.6,gain:.11,type:'lowpass'});
+    tone(600,.50,'sine',.07,.06,520);
+  },
+  'deafening-blast': function(){
+    tone(55,.70,'sine',.24,0,-22);
+    noise(.45,{freq:700,q:.5,gain:.13,to:120,type:'lowpass'});
+    tone(160,.50,'triangle',.10,0,-90);
+  }
+};
+const PACK_DOTA = {
+  orb: {
+    Q: function(){
+      tone(1180,.22,'sine',.12); tone(1770,.16,'sine',.06,.005);
+      noise(.07,{freq:3200,q:.8,gain:.05});
+    },
+    W: function(){
+      tone(880,.11,'sawtooth',.09,0,-560);
+      noise(.09,{freq:2600,q:1.2,gain:.09,to:900});
+    },
+    E: function(){
+      tone(250,.24,'triangle',.12,0,-120);
+      noise(.20,{freq:1100,q:.7,gain:.07,to:400,type:'lowpass'});
+    }
+  },
+  cast: function(sp){ const v = sp && CAST_VOICE[sp.id]; if(v) v(); else castBase(); },
+  err: function(){
+    tone(120,.22,'square',.10,0,-50);
+    noise(.16,{freq:520,q:.6,gain:.08,type:'lowpass'});
+  },
+  win: function(){
+    [523,659,784,1046].forEach(function(f,i){
+      tone(f,.55,'sine',.10,i*.09);
+      tone(f*2,.30,'sine',.035,i*.09);
+    });
+  }
+};
+function pack(){ return CFG.soundPack === 'synth' ? PACK_SYNTH : PACK_DOTA; }
+function sfxOrb(c){ pack().orb[c](); }
+function sfxCast(sp){ pack().cast(sp); }
+function sfxBad(){ pack().err(); }
+function sfxFinish(){ pack().win(); }
 
 /* ==================== ЭФФЕКТЫ ==================== */
 const fx = $('#fx'), flash = $('#flash');
@@ -700,9 +856,10 @@ function renderHome(){
   const races = runs.filter(function(r){ return r.m === 'race'; });
   const best = races.length ? Math.min.apply(null, races.map(function(r){ return r.t; })) : 0;
   $('#homeStats').innerHTML =
-    stat('Лучшее время', best ? fmt(best) + ' с' : '—') +
+    stat('Лучшее время', races.length ? fmt(best) + ' с' : '—') +
     stat('Заездов', races.length) +
-    stat('Кастов всего', endlessStats.casts);
+    stat('Кастов всего', stats.casts) +
+    stat('Рекордов спеллов', Object.keys(spellBest).length + ' / 10');
 }
 
 function renderQueue(){
@@ -719,6 +876,16 @@ function renderQueue(){
       el.setAttribute('data-sig',''); el.className = 'slot'; el.innerHTML = '';
     }
   }
+  updateReady();
+}
+
+/* комбинация собрана — подсвечиваем Invoke */
+function updateReady(){
+  const sp = S.cur, iv = $('#btnInvoke'), tg = $('.target');
+  if(!sp || !S.running){ iv.classList.remove('ready'); if(tg) tg.classList.remove('good'); return; }
+  const ok = S.queue.length === 3 && sort3(S.queue.join('')) === sort3(sp.combo);
+  iv.classList.toggle('ready', ok);
+  if(tg) tg.classList.toggle('good', ok);
 }
 
 function updateHud(){
@@ -798,13 +965,15 @@ function invoke(){
     S.parActual += parStep;
     if(S.curPresses > parStep) floatText(ir.left-20, ir.top+ir.height/2, '+'+(S.curPresses-parStep), '#ff8a5c', 'plusone');
     sparks(ix,iy,'233,181,88',22,220);
-    sfxGood();
+    sfxCast(sp);
 
     S.per.push({id:sp.id, name:sp.name, combo:sp.combo, ms:ms, presses:S.curPresses, par:parStep, err:S.curErr||0});
     if(S.per.length > 80) S.per.shift();
     S.history.push(sp.id);
     if(S.history.length > 9) S.history.shift();
     renderHistory();
+
+    S.casts++; stats.casts++; saveStats();
 
     const prev = spellBest[sp.id];
     if(!prev || ms < prev.ms) spellBest[sp.id] = {ms:Math.round(ms), tries:(prev ? prev.tries : 0) + 1};
@@ -815,9 +984,10 @@ function invoke(){
 
     if(!CFG.keepQueue) S.queue = [];
     renderQueue();
+    $('.target').classList.remove('bad');
 
     if(S.mode === 'endless'){
-      S.streak++; S.casts++;
+      S.streak++;
       S.order = shuffled(SPELLS.map(function(_,i){ return i; }));
       S.idx = 0;
     }else{
@@ -836,6 +1006,9 @@ function invoke(){
     sfxBad();
     const nm = $('#tName');
     nm.classList.remove('shake'); void nm.offsetWidth; nm.classList.add('shake');
+    const tg = $('.target');
+    tg.classList.remove('bad'); void tg.offsetWidth; tg.classList.add('bad');
+    setTimeout(function(){ tg.classList.remove('bad'); }, 420);
     updateHud();
   }
 }
@@ -851,6 +1024,8 @@ function finish(){
     runs.unshift({t:t, e:S.errors, p:S.presses, par:S.par, m:S.mode, per:S.per.slice()});
     runs = runs.slice(0, 30);
     store.set('invoker_runs', runs);
+    stats.err += S.errors;
+    saveStats();
   }
   const eff = S.par ? Math.round(S.par / S.presses * 100) : 100;
 
@@ -871,17 +1046,16 @@ function stopEndless(){
   if(!S.running) return;
   S.running = false; clearInterval(S.timerId);
   const t = performance.now() - (S.startedAt || performance.now());
-  endlessStats.casts += S.casts;
-  endlessStats.err  += S.errors;
-  if(S.streak > endlessStats.best) endlessStats.best = S.streak;
-  store.set('invoker_endless', endlessStats);
+  stats.err += S.errors;
+  if(S.streak > stats.bestStreak) stats.bestStreak = S.streak;
+  saveStats();
 
   const avg = S.casts ? (S.per.reduce(function(a,p){ return a+p.ms; },0)/S.per.length) : 0;
   $('#rKicker').textContent = 'Тренировка остановлена';
   $('#rTime').textContent = fmt(t);
   $('#rRows').innerHTML = stat('Кастов', S.casts) + stat('Ошибок', S.errors) +
                            stat('Лучшая серия', S.streak) + stat('На спелл', avg ? (avg/1000).toFixed(2)+'с' : '—');
-  $('#rNote').innerHTML = 'Всего за тренировку: <b>' + endlessStats.casts + '</b> кастов, рекорд серии <b>' + endlessStats.best + '</b>';
+  $('#rNote').innerHTML = 'Всего кастов за всё время: <b>' + stats.casts + '</b>, рекорд серии <b>' + stats.bestStreak + '</b>';
   $('#rAnalysis').innerHTML = buildAnalysis();
   sfxFinish();
   show('result');
@@ -942,15 +1116,16 @@ function leaveMenu(){ clearInterval(S.timerId); S.running = false; renderHome();
 $('#btnLeave').addEventListener('click', leaveMenu);
 $('#btnMenu').addEventListener('click', leaveMenu);
 $('#btnSound').addEventListener('click', function(){
-  CFG.sound = !CFG.sound;
+  CFG.soundPack = CFG.soundPack === 'off' ? 'dota' : 'off';
   saveCfg();
-  this.classList.toggle('off', !CFG.sound);
-  if(CFG.sound) sfxOrb('W');
+  paintSeg('#segSound', CFG.soundPack);
+  paintSoundBtn();
+  if(CFG.soundPack !== 'off') sfxOrb('W');
 });
 $('#btnWipe').addEventListener('click', function(){
-  runs = []; endlessStats = {casts:0, best:0, err:0}; spellBest = {};
+  runs = []; stats = {casts:0, err:0, bestStreak:0}; spellBest = {};
   store.set('invoker_runs', runs);
-  store.set('invoker_endless', endlessStats);
+  saveStats();
   store.set('invoker_spell', spellBest);
   renderHome();
 });
@@ -970,8 +1145,18 @@ function paintSeg(sel, val){
 }
 bindSeg('#segHints', function(v){ CFG.hints = +v; });
 bindSeg('#segQueue', function(v){ CFG.keepQueue = v === '1'; });
+bindSeg('#segSound', function(v){
+  CFG.soundPack = v;
+  paintSoundBtn();
+  if(v !== 'off') sfxOrb('W');
+});
 paintSeg('#segHints', CFG.hints);
 paintSeg('#segQueue', CFG.keepQueue ? '1' : '0');
+paintSeg('#segSound', CFG.soundPack);
+function paintSoundBtn(){
+  $('#btnSound').classList.toggle('off', CFG.soundPack === 'off');
+  $('#btnSound').title = CFG.soundPack === 'dota' ? 'Звук: Dota' : (CFG.soundPack === 'synth' ? 'Звук: Синтез' : 'Звук выключен');
+}
 
 /* --- переназначение клавиш --- */
 let capturing = null;
@@ -999,6 +1184,19 @@ document.addEventListener('keydown', function(e){
 
   const active = $$('.screen').filter(function(s){ return s.classList.contains('active'); })[0];
   const id = active ? active.id : '';
+
+  if(e.code === 'Escape'){
+    if(id === 'screen-game'){
+      e.preventDefault();
+      if(S.mode === 'endless') stopEndless(); else leaveMenu();
+    }else if(id === 'screen-result'){
+      e.preventDefault(); leaveMenu();
+    }else if(id === 'screen-start'){
+      const box = $('#settingsBox'); if(box.open) box.open = false;
+    }
+    return;
+  }
+
   if(id === 'screen-start' || id === 'screen-result'){
     if(e.code === 'Space' || e.code === 'Enter'){ e.preventDefault(); id === 'screen-result' ? start(S.mode) : start('race'); }
     return;
@@ -1019,8 +1217,7 @@ function paintOrbCaps(){
 }
 
 /* ==================== СТАРТ ==================== */
-renderSheet(); renderBinds(); paintOrbCaps(); renderHome();
-$('#btnSound').classList.toggle('off', !CFG.sound);
+renderSheet(); renderBinds(); paintOrbCaps(); renderHome(); paintSoundBtn();
 </script>
 </body>
 </html>
