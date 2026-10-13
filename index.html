@@ -22,6 +22,8 @@ body{margin:0;background:var(--bg);color:var(--fg);
              radial-gradient(700px 500px at 8% 100%,rgba(111,211,255,.12),transparent 65%),
              radial-gradient(700px 500px at 95% 95%,rgba(255,154,60,.12),transparent 65%),
              linear-gradient(180deg,#0a0c12,#05060a 70%)}
+.bg::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 42%,rgba(0,0,0,.55) 100%)}
 .bg::after{content:"";position:absolute;inset:0;opacity:.35;
   background-image:radial-gradient(1px 1px at 20% 30%,rgba(255,255,255,.35),transparent),
                    radial-gradient(1px 1px at 70% 12%,rgba(255,255,255,.25),transparent),
@@ -192,6 +194,41 @@ body{margin:0;background:var(--bg);color:var(--fg);
 .invoke:hover{box-shadow:0 0 0 2px rgba(255,230,176,.5),0 0 64px rgba(233,181,88,.5),inset 0 2px 0 rgba(255,255,255,.6)}
 .invoke.down{transform:scale(.95)}
 
+/* ---------- rail / halo / history ---------- */
+.stage,.hud{max-width:780px}
+.rail{display:flex;gap:6px;align-items:center;justify-content:center;padding:2px 4px 8px}
+.rail .pip{width:30px;height:5px;border-radius:3px;background:rgba(255,255,255,.1);transition:background .25s}
+.rail .pip.done{background:linear-gradient(90deg,#ffe6b0,#e9b558)}
+.rail .pip.now{background:#ffe6b0;box-shadow:0 0 14px rgba(233,181,88,.8);animation:pip 1.6s ease-in-out infinite}
+@keyframes pip{50%{opacity:.5}}
+.frame-wrap{position:relative;display:grid;place-items:center;padding:34px}
+.halo{position:absolute;width:276px;height:276px;border-radius:50%;pointer-events:none;
+  border:1px solid rgba(233,181,88,.09);animation:spin 34s linear infinite}
+.halo::before{content:"";position:absolute;inset:-15px;border-radius:50%;
+  border:1px dashed rgba(233,181,88,.10);animation:spin 52s linear reverse infinite}
+.halo::after{content:"";position:absolute;inset:28px;border-radius:50%;
+  border:1px solid rgba(233,181,88,.07);animation:spin 24s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.t-head{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.best-chip{font:600 11px/1 ui-monospace,Consolas,monospace;color:var(--ok);
+  border:1px solid rgba(125,255,168,.26);background:rgba(125,255,168,.08);padding:5px 10px;border-radius:999px}
+.best-chip.none{color:var(--muted);border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.04)}
+.history{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;min-height:32px}
+.history img{width:30px;height:30px;border-radius:7px;border:1px solid rgba(255,255,255,.06);opacity:.85}
+.history img.old{opacity:.28}
+.history-cap{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.btn-ghost svg{display:block}
+.btn-ghost .cross{display:none}
+.btn-ghost.off .wave{display:none}
+.btn-ghost.off .cross{display:block}
+.btn-ghost.off{color:var(--muted);border-color:rgba(255,255,255,.1)}
+.home-stats{display:flex;gap:8px;width:100%;max-width:560px;flex-wrap:wrap}
+#chainGrid{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+.home-stats div{flex:1;min-width:112px;text-align:center;padding:11px;border-radius:10px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.home-stats span{display:block;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.home-stats b{font:700 17px/1 ui-monospace,Consolas,monospace;color:var(--gold-lt)}
+
 /* ---------- result ---------- */
 .result{width:100%;max-width:560px;background:var(--panel);border:1px solid var(--line);border-radius:18px;
   padding:26px 24px;display:flex;flex-direction:column;align-items:center;gap:6px;
@@ -273,6 +310,7 @@ body{margin:0;background:var(--bg);color:var(--fg);
       <button class="btn-alt" id="btnCombo">КОМБО-ЦЕПОЧКИ</button>
     </div>
     <p class="hint-key">клавиши <kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd> — сферы, <kbd>R</kbd> — Invoke</p>
+    <div class="home-stats" id="homeStats"></div>
 
     <details class="box settings" id="settingsBox">
       <summary><span class="chev">▾</span> НАСТРОЙКИ</summary>
@@ -321,17 +359,34 @@ body{margin:0;background:var(--bg);color:var(--fg);
       <div class="stat"><span class="stat-label" id="l3">Спеллов</span><span class="stat-value" id="s3">0 / 10</span></div>
       <div class="stat"><span class="stat-label">Par / нажатия</span><span class="stat-value" id="s4">0 / 0</span></div>
       <div class="hud-btns">
+        <button class="btn-ghost" id="btnSound" title="Звук" aria-label="Звук">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 9v6h4l5 4V5L8 9H4z"></path>
+            <path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7"></path>
+            <path class="wave" d="M19.5 6a8.5 8.5 0 0 1 0 12"></path>
+            <path class="cross" d="M17 9.5l5 5M22 9.5l-5 5"></path>
+          </svg>
+        </button>
         <button class="btn-ghost" id="btnStop" style="display:none">Стоп</button>
         <button class="btn-ghost" id="btnRestart">Заново</button>
+        <button class="btn-ghost" id="btnLeave">Меню</button>
       </div>
     </div>
 
     <div class="stage">
+      <div class="rail" id="rail"></div>
       <div class="chain" id="chainRow" style="display:none"></div>
 
       <div class="target">
-        <div class="frame"><img id="tImg" alt=""></div>
-        <div class="target-name" id="tName">—</div>
+        <div class="frame-wrap">
+          <div class="halo"></div>
+          <div class="frame"><img id="tImg" alt=""></div>
+        </div>
+        <div class="t-head">
+          <div class="target-name" id="tName">—</div>
+          <div class="best-chip none" id="tBest">—</div>
+        </div>
         <div class="chips" id="tChips"></div>
       </div>
 
@@ -346,6 +401,8 @@ body{margin:0;background:var(--bg);color:var(--fg);
         <button class="orb-btn e" data-orb="E"><img alt="Exort"><span class="orb-cap"><b>E</b><s>Exort</s></span></button>
         <button class="invoke" id="btnInvoke" aria-label="Invoke"><kbd>R</kbd><span>INVOKE</span></button>
       </div>
+
+      <div class="history" id="history"></div>
     </div>
   </section>
 
@@ -415,8 +472,8 @@ const ORB_COLOR = {Q:'111,211,255', W:'185,139,255', E:'255,154,60'};
 const ORB_TONE  = {Q:520, W:700, E:400};
 const ORB_NAME  = {Q:'Quas', W:'Wex', E:'Exort'};
 
-const $  = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
+const $  = (s, root) => (root || document).querySelector(s);
+const $$ = (s, root) => Array.from((root || document).querySelectorAll(s));
 const store = {
   get: function(k, d){ try{ const v = localStorage.getItem(k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } },
   set: function(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
@@ -424,12 +481,13 @@ const store = {
 
 /* ==================== НАСТРОЙКИ ==================== */
 const DEF_BINDS = {Q:'KeyQ', W:'KeyW', E:'KeyE', R:'KeyR'};
-const CFG = Object.assign({hints:0, keepQueue:true, binds:null}, store.get('invoker_cfg', {}));
+const CFG = Object.assign({hints:0, keepQueue:true, sound:true, binds:null}, store.get('invoker_cfg', {}));
 CFG.binds = Object.assign({}, DEF_BINDS, CFG.binds || {});
 const saveCfg = () => store.set('invoker_cfg', CFG);
 
 let runs = store.get('invoker_runs', []);
 let endlessStats = store.get('invoker_endless', {casts:0, best:0, err:0});
+let spellBest = store.get('invoker_spell', {});
 
 function keyLabel(code){
   if(!code) return '—';
@@ -456,6 +514,7 @@ let AC = null;
 function audioCtx(){ if(!AC){ AC = new (window.AudioContext||window.webkitAudioContext)(); } if(AC.state==='suspended'){ AC.resume(); } return AC; }
 function tone(freq, dur, type, vol, delay, slide){
   try{
+    if(!CFG.sound) return;
     const a = audioCtx(), t0 = a.currentTime + (delay||0);
     const o = a.createOscillator(), g = a.createGain();
     o.type = type||'sine'; o.frequency.setValueAtTime(freq, t0);
@@ -517,7 +576,7 @@ function doFlash(kind){ flash.className='flash'; void flash.offsetWidth; flash.c
 const S = {
   mode:'race', order:[], idx:0, errors:0, queue:[], presses:0, par:0, parActual:0,
   startedAt:0, spellAt:0, timerId:null, running:false,
-  chain:null, per:[], cur:null, streak:0, casts:0, curPresses:0
+  chain:null, per:[], cur:null, streak:0, casts:0, curPresses:0, history:[]
 };
 const fmt  = ms => (ms/1000).toFixed(2);
 const sort3 = s => s.split('').sort().join('');
@@ -603,7 +662,47 @@ function renderTarget(){
     $('#chainRow').style.display = 'flex';
   }
   S.spellAt = performance.now();
+  renderRail();
+  renderBest();
   updateHud();
+}
+
+function renderRail(){
+  const rail = $('#rail');
+  if(S.mode !== 'race'){ rail.innerHTML = ''; rail.style.display = 'none'; return; }
+  rail.style.display = 'flex';
+  let html = '';
+  for(let i=0;i<S.order.length;i++){
+    html += '<div class="pip' + (i < S.idx ? ' done' : (i === S.idx ? ' now' : '')) + '"></div>';
+  }
+  rail.innerHTML = html;
+}
+function renderHistory(){
+  const h = $('#history');
+  if(!S.history.length){ h.innerHTML = ''; return; }
+  h.innerHTML = '<span class="history-cap">касты</span>' + S.history.map(function(id,i){
+    return '<img src="'+IMG[id]+'" alt="" class="' + (i < S.history.length-4 ? 'old' : '') + '">';
+  }).join('');
+}
+function renderBest(){
+  const sp = S.cur;
+  if(!sp) return;
+  const b = spellBest[sp.id], el = $('#tBest');
+  if(b){
+    el.className = 'best-chip';
+    el.textContent = 'рекорд ' + (b.ms/1000).toFixed(2) + 'с · ' + b.tries + ' ' + (b.tries === 1 ? 'заход' : 'заходов');
+  }else{
+    el.className = 'best-chip none';
+    el.textContent = 'первый заход';
+  }
+}
+function renderHome(){
+  const races = runs.filter(function(r){ return r.m === 'race'; });
+  const best = races.length ? Math.min.apply(null, races.map(function(r){ return r.t; })) : 0;
+  $('#homeStats').innerHTML =
+    stat('Лучшее время', best ? fmt(best) + ' с' : '—') +
+    stat('Заездов', races.length) +
+    stat('Кастов всего', endlessStats.casts);
 }
 
 function renderQueue(){
@@ -647,7 +746,7 @@ function shuffled(arr){
 function start(mode){
   S.mode = mode;
   S.idx = 0; S.errors = 0; S.queue = []; S.presses = 0; S.curPresses = 0; S.parActual = 0;
-  S.per = []; S.streak = 0; S.casts = 0; S.startedAt = 0; S.running = true; S.chain = null;
+  S.per = []; S.streak = 0; S.casts = 0; S.startedAt = 0; S.running = true; S.chain = null; S.history = [];
 
   if(mode === 'combo'){
     S.chain = CHAINS[Math.random()*CHAINS.length|0];
@@ -662,7 +761,7 @@ function start(mode){
   $('#btnRestart').style.display = mode === 'endless' ? 'none' : '';
   $('#chainRow').style.display = mode === 'combo' ? 'flex' : 'none';
 
-  renderQueue(); renderTarget();
+  renderQueue(); renderTarget(); renderHistory();
   clearInterval(S.timerId);
   S.timerId = setInterval(function(){ if(S.running && S.startedAt) updateHud(); }, 47);
   show('game');
@@ -703,6 +802,15 @@ function invoke(){
 
     S.per.push({id:sp.id, name:sp.name, combo:sp.combo, ms:ms, presses:S.curPresses, par:parStep, err:S.curErr||0});
     if(S.per.length > 80) S.per.shift();
+    S.history.push(sp.id);
+    if(S.history.length > 9) S.history.shift();
+    renderHistory();
+
+    const prev = spellBest[sp.id];
+    if(!prev || ms < prev.ms) spellBest[sp.id] = {ms:Math.round(ms), tries:(prev ? prev.tries : 0) + 1};
+    else prev.tries++;
+    store.set('invoker_spell', spellBest);
+
     S.curPresses = 0; S.curErr = 0;
 
     if(!CFG.keepQueue) S.queue = [];
@@ -830,10 +938,21 @@ $('#btnCombo').addEventListener('click', function(){ start('combo'); });
 $('#btnAgain').addEventListener('click', function(){ start(S.mode); });
 $('#btnRestart').addEventListener('click', function(){ start(S.mode); });
 $('#btnStop').addEventListener('click', stopEndless);
-$('#btnMenu').addEventListener('click', function(){ clearInterval(S.timerId); S.running=false; show('start'); });
+function leaveMenu(){ clearInterval(S.timerId); S.running = false; renderHome(); show('start'); }
+$('#btnLeave').addEventListener('click', leaveMenu);
+$('#btnMenu').addEventListener('click', leaveMenu);
+$('#btnSound').addEventListener('click', function(){
+  CFG.sound = !CFG.sound;
+  saveCfg();
+  this.classList.toggle('off', !CFG.sound);
+  if(CFG.sound) sfxOrb('W');
+});
 $('#btnWipe').addEventListener('click', function(){
-  runs = []; endlessStats = {casts:0, best:0, err:0};
-  store.set('invoker_runs', runs); store.set('invoker_endless', endlessStats);
+  runs = []; endlessStats = {casts:0, best:0, err:0}; spellBest = {};
+  store.set('invoker_runs', runs);
+  store.set('invoker_endless', endlessStats);
+  store.set('invoker_spell', spellBest);
+  renderHome();
 });
 
 /* --- сегменты настроек --- */
@@ -900,7 +1019,8 @@ function paintOrbCaps(){
 }
 
 /* ==================== СТАРТ ==================== */
-renderSheet(); renderBinds(); paintOrbCaps();
+renderSheet(); renderBinds(); paintOrbCaps(); renderHome();
+$('#btnSound').classList.toggle('off', !CFG.sound);
 </script>
 </body>
 </html>
