@@ -1,3 +1,5 @@
+<img width="760" height="760" alt="invoker-render" src="https://github.com/user-attachments/assets/380731e0-bb08-4af2-acd2-4b73daa98bdb" />
+
 # Тренажёр Инвокера
 
 https://phantom-lancer.github.io/invoker-game/
