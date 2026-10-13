@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Тренажёр Инвокера · Dota 2</title>
-<meta name="description" content="тренажёр Инвокера Dota 2: 10 комбинаций, цепочки кастов, бесконечный режим и разбор ошибок.">
+<meta name="description" content="Бесплатный тренажёр Инвокера Dota 2: 10 комбинаций, цепочки кастов, бесконечный режим и разбор ошибок.">
 <meta name="theme-color" content="#07080c">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='27' fill='%23e9b558'/><circle cx='32' cy='32' r='13' fill='%23fff6de'/></svg>">
 <style>
@@ -319,6 +319,13 @@ body{margin:0;background:var(--bg);color:var(--fg);
 .lvl-row input::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;cursor:pointer;
   background:radial-gradient(circle at 50% 30%,#fff2cf,#e9b558 60%,#a9741a);box-shadow:0 0 14px rgba(233,181,88,.6)}
 .lvl-val{font:700 13px/1 ui-monospace,Consolas,monospace;color:var(--gold-lt);min-width:48px;text-align:right}
+.vol-wrap{display:flex;align-items:center;gap:12px;flex:1;max-width:280px}
+.vol-wrap input{flex:1;-webkit-appearance:none;appearance:none;height:5px;border-radius:3px;
+  background:rgba(255,255,255,.1);outline:none;cursor:pointer}
+.vol-wrap input::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;cursor:pointer;
+  background:radial-gradient(circle at 50% 30%,#fff2cf,#e9b558 60%,#a9741a);box-shadow:0 0 12px rgba(233,181,88,.55)}
+.vol-wrap input::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;cursor:pointer;background:#e9b558}
+.vol-wrap b{font:700 12px/1 ui-monospace,Consolas,monospace;color:var(--gold-lt);min-width:42px;text-align:right}
 .slots{display:flex;gap:10px}
 .slot-btn{flex:1;position:relative;height:72px;border-radius:12px;border:1px dashed rgba(255,255,255,.12);
   background:rgba(255,255,255,.03);cursor:pointer;display:grid;place-items:center;gap:2px;overflow:hidden;transition:.18s}
@@ -610,6 +617,13 @@ body{margin:0;background:var(--bg);color:var(--fg);
         </div>
       </div>
       <div class="set-row">
+        <span>Громкость</span>
+        <div class="vol-wrap">
+          <input type="range" id="vol" min="0" max="100" value="70">
+          <b id="volVal">70%</b>
+        </div>
+      </div>
+      <div class="set-row">
         <span>Очередь после Invoke</span>
         <div class="seg" id="segQueue">
           <button data-v="1">Сохранять</button>
@@ -850,10 +864,14 @@ const store = {
   set: function(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
 const DEF_BINDS = {Q:'KeyQ', W:'KeyW', E:'KeyE', R:'KeyR'};
-const CFG = Object.assign({hints:0, keepQueue:true, soundPack:'dota', binds:null}, store.get('invoker_cfg', {}));
+const CFG = Object.assign({hints:0, keepQueue:true, soundPack:'dota', volume:0.7, muted:false, binds:null}, store.get('invoker_cfg', {}));
 if(CFG.soundPack === 'real') CFG.soundPack = 'dota';
+if(CFG.volume == null) CFG.volume = 0.7;
+if(CFG.volume < 0 || CFG.volume > 1) CFG.volume = 0.7;
 CFG.binds = Object.assign({}, DEF_BINDS, CFG.binds || {});
 const saveCfg = () => store.set('invoker_cfg', CFG);
+const VOL = () => CFG.muted ? 0 : CFG.volume;
+const DOTA_MIX = 0.72;
 
 let runs = store.get('invoker_runs', []);
 let stats = Object.assign({casts:0, err:0, bestStreak:0}, store.get('invoker_stats', {}));
@@ -888,8 +906,9 @@ function tone(freq, dur, type, vol, delay, slide){
     const o = a.createOscillator(), g = a.createGain();
     o.type = type||'sine'; o.frequency.setValueAtTime(freq, t0);
     if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(40,freq+slide), t0+dur);
+    const v = (vol||0.2) * VOL();
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(vol||0.2, t0+0.012);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, v), t0+0.012);
     g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
     o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0+dur+0.04);
   }catch(e){}
@@ -916,7 +935,7 @@ function noise(dur, o){
     flt.Q.value = o.q || 1;
     const g = a.createGain();
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(o.gain||0.08, t0+0.012);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, (o.gain||0.08) * VOL()), t0+0.012);
     g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
     src.connect(flt); flt.connect(g); g.connect(a.destination);
     src.start(t0); src.stop(t0+dur+0.05);
@@ -961,7 +980,8 @@ function playSample(n, gain){
   try{
     const a = audioCtx();
     const s = a.createBufferSource(); s.buffer = buf;
-    const g = a.createGain(); g.gain.value = gain == null ? 0.95 : gain;
+    const g = a.createGain();
+    g.gain.value = (gain == null ? 0.95 : gain) * VOL();
     s.connect(g); g.connect(a.destination);
     s.start();
     return true;
@@ -1094,10 +1114,10 @@ function pack(){
 function packCast(sp){
   if(CFG.soundPack === 'off') return;
   if(CFG.soundPack === 'dota'){
-    if(SBUF.invoke) playSample('invoke', .4);
+    if(SBUF.invoke) playSample('invoke', .4 * DOTA_MIX);
     if(CFG.spellSfx !== false && sp){
       const n = REAL_SPELL[sp.id];
-      if(n && SBUF[n]) playSample(n, 1);
+      if(n && SBUF[n]) playSample(n, DOTA_MIX);
     }
     return;
   }
@@ -1107,8 +1127,8 @@ function previewSound(){
   decodeSamples();
   if(CFG.soundPack === 'off') return;
   if(CFG.soundPack === 'dota'){
-    if(SBUF.invoke) playSample('invoke', .8);
-    setTimeout(function(){ if(CFG.spellSfx !== false && SBUF.tornado) playSample('tornado', .9); }, 260);
+    if(SBUF.invoke) playSample('invoke', .8 * DOTA_MIX);
+    setTimeout(function(){ if(CFG.spellSfx !== false && SBUF.tornado) playSample('tornado', .9 * DOTA_MIX); }, 260);
     return;
   }
   sfxOrb('W');
@@ -1440,7 +1460,7 @@ function invoke(){
         ring(x,y,110); sparks(x,y,'233,181,88',20,200);
         floatText(x, y-42, found.name.toUpperCase());
       }
-      if(SBUF.invoke) playSample('invoke', .85);
+      if(SBUF.invoke) playSample('invoke', .85 * DOTA_MIX);
       if(!CFG.keepQueue) S.queue = [];
       renderQueue();
       renderFreeSlots();
@@ -1996,13 +2016,27 @@ $('#btnLeave').addEventListener('click', leaveMenu);
 $('#btnMenu').addEventListener('click', leaveMenu);
 $('#btnSound').addEventListener('click', cycleSound);
 $('#btnSound2').addEventListener('click', cycleSound);
+['#btnSound','#btnSound2'].forEach(function(sel){
+  const b = $(sel);
+  b.addEventListener('wheel', function(e){
+    e.preventDefault();
+    if(CFG.soundPack === 'off') CFG.soundPack = 'dota';
+    setVolume(CFG.volume + (e.deltaY < 0 ? 0.05 : -0.05), false);
+  }, {passive:false});
+});
 function cycleSound(){
-  const order = ['dota','synth','off'];
-  CFG.soundPack = order[(order.indexOf(CFG.soundPack) + 1) % order.length];
+  if(CFG.muted || CFG.volume === 0){
+    CFG.muted = false;
+    if(CFG.volume === 0) CFG.volume = 0.7;
+  }else if(CFG.soundPack !== 'off'){
+    CFG.muted = true;
+  }else{
+    CFG.soundPack = 'dota';
+  }
   saveCfg();
   paintSeg('#segSound', CFG.soundPack);
   paintSoundBtn();
-  if(CFG.soundPack !== 'off') sfxOrb('W');
+  if(!CFG.muted && CFG.volume > 0 && CFG.soundPack !== 'off') sfxOrb('W');
 }
 $('#btnWipe').addEventListener('click', function(){
   runs = []; stats = {casts:0, err:0, bestStreak:0}; spellBest = {};
@@ -2034,13 +2068,27 @@ paintSeg('#segQueue', CFG.keepQueue ? '1' : '0');
 paintSeg('#segSound', CFG.soundPack);
 paintSeg('#segSpellSfx', CFG.spellSfx === false ? '0' : '1');
 function paintSoundBtn(){
-  const on = CFG.soundPack !== 'off';
+  const off = CFG.soundPack === 'off' || CFG.muted || CFG.volume === 0;
   ['#btnSound','#btnSound2'].forEach(function(s){
     const b = $(s); if(!b) return;
-    b.classList.toggle('off', !on);
-    b.title = 'Звук: ' + (CFG.soundPack === 'dota' ? 'Dota' : (CFG.soundPack === 'synth' ? 'Синтез' : 'выключен'));
+    b.classList.toggle('off', off);
+    const name = CFG.soundPack === 'dota' ? 'Dota' : (CFG.soundPack === 'synth' ? 'Синтез' : 'выключен');
+    b.title = 'Звук: ' + name + ' · ' + Math.round(CFG.volume * 100) + '% (колесо — громкость)';
   });
+  $('#vol').value = Math.round(CFG.volume * 100);
+  $('#volVal').textContent = Math.round(CFG.volume * 100) + '%';
 }
+function setVolume(v, play){
+  CFG.volume = Math.max(0, Math.min(1, v));
+  if(CFG.volume > 0) CFG.muted = false;
+  saveCfg();
+  paintSoundBtn();
+  if(play) sfxOrb('W');
+}
+$('#vol').addEventListener('input', function(){
+  setVolume((+this.value) / 100, false);
+});
+$('#vol').addEventListener('change', function(){ sfxOrb('W'); });
 
 /* --- переназначение клавиш --- */
 let capturing = null;
