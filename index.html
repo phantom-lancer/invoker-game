@@ -119,6 +119,35 @@ body{margin:0;background:var(--bg);color:var(--fg);
   text-decoration:underline;padding:6px 2px}
 .link-btn:hover{color:var(--bad)}
 
+/* ---------- сохранение прогресса ---------- */
+.save-row{display:flex;gap:8px;flex-wrap:wrap}
+.btn-mini{appearance:none;border:1px solid rgba(233,181,88,.26);background:rgba(233,181,88,.075);color:var(--gold-lt);
+  font:600 11.5px/1 "Segoe UI",sans-serif;letter-spacing:.04em;padding:9px 13px;border-radius:9px;cursor:pointer;
+  transition:background .15s,border-color .15s,transform .15s}
+.btn-mini:hover{background:rgba(233,181,88,.17);border-color:rgba(233,181,88,.5);transform:translateY(-1px)}
+.btn-mini.solid{background:linear-gradient(180deg,#ffe9b8,#e9b558 46%,#b8811f);color:#1a1206;border-color:transparent;
+  box-shadow:0 8px 20px rgba(233,181,88,.22),inset 0 1px 0 rgba(255,255,255,.6)}
+.btn-mini.solid:hover{filter:brightness(1.07)}
+.modal{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:18px;
+  background:rgba(4,5,9,.8);backdrop-filter:blur(7px)}
+.modal[hidden]{display:none}
+.modal-card{width:min(540px,100%);max-height:88vh;overflow:auto;padding:22px;border-radius:16px;
+  background:linear-gradient(180deg,#171a23,#0d0f15);border:1px solid rgba(233,181,88,.3);
+  box-shadow:0 30px 80px rgba(0,0,0,.72),0 0 44px rgba(233,181,88,.08)}
+.modal-card::before{content:"";display:block;width:44px;height:2px;margin:-6px 0 14px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.modal-h{margin:0 0 6px;font-family:Georgia,serif;font-size:21px;letter-spacing:.04em;
+  background:linear-gradient(180deg,#fff6e2,#e9b558);-webkit-background-clip:text;background-clip:text;color:transparent}
+.modal-sub{margin:0 0 4px;font-size:12.5px;line-height:1.55;color:var(--muted)}
+.modal-lbl{margin:16px 0 6px;font:600 10px/1 "Segoe UI",sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.modal-card textarea{width:100%;min-height:76px;resize:vertical;padding:10px 11px;border-radius:10px;
+  background:rgba(0,0,0,.4);border:1px solid var(--line);color:var(--fg);
+  font:12px/1.5 ui-monospace,Consolas,monospace;word-break:break-all;outline:none}
+.modal-card textarea:focus{border-color:rgba(233,181,88,.55)}
+.modal-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.modal-note{min-height:16px;margin:12px 0 0;font-size:12px;color:var(--ok)}
+.modal-note.err{color:var(--bad)}
+
 /* ---------- HUD ---------- */
 .hud{width:100%;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;backdrop-filter:blur(8px)}
@@ -256,6 +285,36 @@ body{margin:0;background:var(--bg);color:var(--fg);
 .home-stats b{font:700 17px/1 ui-monospace,Consolas,monospace;color:var(--gold-lt)}
 
 .modes{width:100%;max-width:880px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+
+/* ---------- таблица лидеров ---------- */
+.board-box{max-width:880px}
+.board-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.board-head .box-h{margin:0;flex:1;text-align:left;min-width:120px}
+.board{display:flex;flex-direction:column;gap:5px;min-height:56px}
+.board-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto auto;align-items:center;gap:10px;
+  padding:8px 11px;border-radius:9px;border:1px solid rgba(255,255,255,.05);
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.005))}
+.board-row.me{border-color:rgba(233,181,88,.42);background:linear-gradient(90deg,rgba(233,181,88,.13),rgba(233,181,88,.02))}
+.board-rank{font:700 13px/1 ui-monospace,Consolas,monospace;color:var(--muted);text-align:center}
+.board-row.top1 .board-rank{color:#ffd76a}
+.board-row.top2 .board-rank{color:#cfd6e4}
+.board-row.top3 .board-rank{color:#e0a072}
+.board-nick{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.board-time{font:700 15px/1 ui-monospace,Consolas,monospace;color:var(--gold-lt)}
+.board-err{font:600 10.5px/1 "Segoe UI",sans-serif;letter-spacing:.05em;color:var(--muted);min-width:52px;text-align:right}
+.board-empty{margin:0;padding:16px 4px;text-align:center;font-size:12.5px;color:var(--muted)}
+.board-sep{padding:3px 0;text-align:center;font-size:11px;letter-spacing:.3em;color:rgba(141,147,168,.5)}
+.board-note{margin:10px 0 0;font-size:11.5px;color:var(--muted);min-height:14px}
+.board-note.err{color:var(--bad)}
+.board-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;
+  border-top:1px solid rgba(255,255,255,.05)}
+.board-lbl{font:600 10px/1 "Segoe UI",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.nick-input{width:150px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.35);
+  color:var(--fg);font:600 12.5px/1 "Segoe UI",sans-serif;outline:none;transition:border-color .15s}
+.nick-input:focus{border-color:rgba(233,181,88,.55)}
+.board-del{margin-left:auto;font-size:11px}
+@media (max-width:620px){ .board-err{display:none} .board-row{grid-template-columns:26px minmax(0,1fr) auto} }
+
 .mode-card{position:relative;text-align:left;cursor:pointer;padding:14px;border-radius:14px;overflow:hidden;
   background:linear-gradient(180deg,rgba(26,29,40,.86),rgba(14,16,23,.86));border:1px solid rgba(255,255,255,.08);
   color:var(--fg);font-family:inherit;transition:transform .16s ease,border-color .2s,box-shadow .2s;display:flex;gap:12px}
@@ -590,6 +649,25 @@ body{margin:0;background:var(--bg);color:var(--fg);
     </div>
     <div class="home-stats" id="homeStats"></div>
 
+    <div class="box board-box">
+      <div class="board-head">
+        <p class="box-h">Таблица лидеров</p>
+        <div class="seg" id="segBoard">
+          <button data-v="race" class="on">На время</button>
+          <button data-v="combo">Комбо</button>
+        </div>
+        <button class="btn-mini" id="btnBoardRefresh">Обновить</button>
+      </div>
+      <div class="board" id="boardList"><p class="board-empty">Загрузка…</p></div>
+      <div class="board-foot">
+        <span class="board-lbl">Ник</span>
+        <input class="nick-input" id="nickInput" maxlength="18" placeholder="Игрок" autocomplete="off" spellcheck="false" aria-label="Ник в таблице">
+        <button class="btn-mini" id="btnNickSave">Сохранить</button>
+        <button class="link-btn board-del" id="btnBoardDelete">удалить мои результаты</button>
+      </div>
+      <p class="board-note" id="boardNote"></p>
+    </div>
+
     <details class="box settings" id="settingsBox">
       <summary><span class="chev">▾</span> НАСТРОЙКИ</summary>
 
@@ -633,6 +711,15 @@ body{margin:0;background:var(--bg);color:var(--fg);
       <div class="set-row">
         <span>Клавиши</span>
         <div class="binds" id="binds"></div>
+      </div>
+      <div class="set-row">
+        <span>Прогресс</span>
+        <div class="save-row">
+          <button class="btn-mini" id="btnSaveFile">Сохранить в файл</button>
+          <button class="btn-mini" id="btnLoadFile">Загрузить из файла</button>
+          <button class="btn-mini" id="btnSaveCode">Код</button>
+        </div>
+        <input type="file" id="loadFile" accept=".json,application/json" hidden>
       </div>
       <div class="set-row">
         <span>Рекорды</span>
@@ -803,6 +890,26 @@ body{margin:0;background:var(--bg);color:var(--fg);
       <button class="btn-alt" id="btnMenu" style="margin-top:2px">В МЕНЮ</button>
     </div>
   </section>
+
+  <!-- ============ SAVE MODAL ============ -->
+  <div class="modal" id="saveModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="saveModalH">
+      <p class="modal-h" id="saveModalH">Перенос прогресса</p>
+      <p class="modal-sub">Код хранит рекорды, статистику и настройки. Скопируй его на одном устройстве и вставь на другом: данные объединятся, ничего не затрётся.</p>
+
+      <p class="modal-lbl">Твой код</p>
+      <textarea id="saveCode" readonly spellcheck="false" aria-label="Код сохранения"></textarea>
+      <div class="modal-row">
+        <button class="btn-mini solid" id="saveCopy">Копировать</button>
+        <button class="btn-mini" id="saveClose">Закрыть</button>
+      </div>
+
+      <p class="modal-lbl">Загрузить из кода</p>
+      <textarea id="loadCode" spellcheck="false" aria-label="Вставь код сохранения" placeholder="Вставь код сохранения…"></textarea>
+      <div class="modal-row"><button class="btn-mini" id="loadApply">Загрузить</button></div>
+      <p class="modal-note" id="saveNote"></p>
+    </div>
+  </div>
 
 </main>
 
@@ -1559,6 +1666,14 @@ function finish(){
      (isBest ? stat('Рекорд', fmt(t)) : '');
   $('#rNote').innerHTML = isBest ? '<b>Новый личный рекорд</b>' : 'Рекорд: <b>' + fmt(best) + ' с</b>';
 
+  if(S.mode === 'race' || S.mode === 'combo'){
+    boardSubmit(S.mode, t, S.errors, S.presses).then(function(res){
+      if(!res || !res.rank) return;
+      const note = $('#rNote');
+      if(note) note.insertAdjacentHTML('beforeend', ' · в таблице <b>#' + res.rank + '</b>');
+    });
+  }
+
   $('#rAnalysis').innerHTML = buildAnalysis();
   sfxFinish();
   setTimeout(function(){ show('result'); }, 650);
@@ -2046,6 +2161,291 @@ $('#btnWipe').addEventListener('click', function(){
   renderHome();
 });
 
+/* --- перенос прогресса --- */
+const SAVE_APP = 'invoker-trainer';
+function savePayload(){
+  return {
+    app: SAVE_APP, v: 1, at: new Date().toISOString(),
+    stats: stats, runs: runs, spell: spellBest,
+    cfg: {
+      hints: CFG.hints, keepQueue: !!CFG.keepQueue, soundPack: CFG.soundPack,
+      spellSfx: CFG.spellSfx !== false, volume: CFG.volume, binds: CFG.binds,
+      nick: CFG.nick || '', boardToken: CFG.boardToken || ''
+    }
+  };
+}
+function encodeSave(obj){
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  let bin = '';
+  bytes.forEach(function(b){ bin += String.fromCharCode(b); });
+  return 'INV1:' + btoa(bin);
+}
+function decodeSave(text){
+  const s = String(text || '').trim().replace(/\s+/g, '');
+  if(s.indexOf('INV1:') !== 0) throw new Error('Это не код тренажёра');
+  let obj;
+  try{
+    const bin = atob(s.slice(5));
+    const bytes = new Uint8Array(bin.length);
+    for(let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    obj = JSON.parse(new TextDecoder().decode(bytes));
+  }catch(e){ throw new Error('Код повреждён или обрезан'); }
+  if(!obj || obj.app !== SAVE_APP) throw new Error('Это не код тренажёра');
+  return obj;
+}
+function mergeSave(obj){
+  const key = function(r){ return [r.m, Math.round(r.t), r.p, r.e].join('|'); };
+  const seen = {};
+  runs.forEach(function(r){ seen[key(r)] = 1; });
+  let added = 0;
+  (Array.isArray(obj.runs) ? obj.runs : []).forEach(function(r){
+    if(!r || typeof r.t !== 'number' || !r.m) return;
+    const k = key(r);
+    if(seen[k]) return;
+    seen[k] = 1; runs.push(r); added++;
+  });
+  runs = runs.slice(0, 40);
+
+  const src = obj.stats || {};
+  ['casts','err','bestStreak','free','endless'].forEach(function(k){
+    stats[k] = Math.max(stats[k] || 0, +src[k] || 0);
+  });
+
+  let recs = 0;
+  const sp = obj.spell || {};
+  Object.keys(sp).forEach(function(id){
+    const cur = spellBest[id], add = sp[id];
+    if(!add || typeof add.ms !== 'number') return;
+    if(!cur || add.ms < cur.ms){ spellBest[id] = add; recs++; }
+    else if(add.tries && (!cur.tries || add.tries > cur.tries)) cur.tries = add.tries;
+  });
+
+  const c = obj.cfg || {};
+  if(c.hints != null) CFG.hints = +c.hints;
+  if(c.keepQueue != null) CFG.keepQueue = !!c.keepQueue;
+  if(c.soundPack === 'dota' || c.soundPack === 'synth' || c.soundPack === 'off') CFG.soundPack = c.soundPack;
+  if(c.spellSfx != null) CFG.spellSfx = !!c.spellSfx;
+  if(typeof c.volume === 'number') CFG.volume = Math.max(0, Math.min(1, c.volume));
+  if(c.binds) CFG.binds = Object.assign({}, DEF_BINDS, c.binds);
+  if(typeof c.nick === 'string') CFG.nick = c.nick.replace(/\s+/g, ' ').trim().slice(0, 18);
+  if(typeof c.boardToken === 'string' && c.boardToken.length >= 16) CFG.boardToken = c.boardToken;
+
+  store.set('invoker_runs', runs);
+  saveStats();
+  store.set('invoker_spell', spellBest);
+  saveCfg();
+  renderHome(); renderBinds(); paintOrbCaps(); paintSoundBtn();
+  if($('#nickInput')) $('#nickInput').value = CFG.nick || '';
+  paintSeg('#segHints', CFG.hints);
+  paintSeg('#segQueue', CFG.keepQueue ? '1' : '0');
+  paintSeg('#segSound', CFG.soundPack);
+  paintSeg('#segSpellSfx', CFG.spellSfx === false ? '0' : '1');
+  return { added: added, recs: recs };
+}
+function saveNote(text, bad){
+  const n = $('#saveNote');
+  n.textContent = text;
+  n.classList.toggle('err', !!bad);
+}
+function openSaveModal(){
+  $('#saveCode').value = encodeSave(savePayload());
+  $('#loadCode').value = '';
+  saveNote('');
+  $('#saveModal').hidden = false;
+  $('#saveCode').focus();
+  $('#saveCode').select();
+  $('#saveCode').scrollTop = 0;
+}
+function closeSaveModal(){ $('#saveModal').hidden = true; }
+
+$('#btnSaveCode').addEventListener('click', openSaveModal);
+$('#saveClose').addEventListener('click', closeSaveModal);
+$('#saveModal').addEventListener('click', function(e){ if(e.target === this) closeSaveModal(); });
+$('#saveCopy').addEventListener('click', function(){
+  const ta = $('#saveCode');
+  const done = function(){ saveNote('Код скопирован.'); };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(ta.value).then(done, function(){ ta.select(); document.execCommand('copy'); done(); });
+  }else{
+    ta.select(); document.execCommand('copy'); done();
+  }
+});
+$('#loadApply').addEventListener('click', function(){
+  try{
+    const r = mergeSave(decodeSave($('#loadCode').value));
+    saveNote('Готово: заездов +' + r.added + ', личных рекордов +' + r.recs + '.');
+    $('#saveCode').value = encodeSave(savePayload());
+  }catch(err){ saveNote(err.message || 'Не получилось загрузить', true); }
+});
+$('#btnSaveFile').addEventListener('click', function(){
+  const blob = new Blob([JSON.stringify(savePayload(), null, 1)], {type:'application/json'});
+  const a = document.createElement('a');
+  const d = new Date(), p2 = function(n){ return String(n).padStart(2, '0'); };
+  a.href = URL.createObjectURL(blob);
+  a.download = 'invoker-progress-' + d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+});
+$('#btnLoadFile').addEventListener('click', function(){ $('#loadFile').click(); });
+$('#loadFile').addEventListener('change', function(){
+  const f = this.files && this.files[0];
+  if(!f) return;
+  const rd = new FileReader();
+  rd.onload = function(){
+    try{
+      const obj = JSON.parse(String(rd.result));
+      if(!obj || obj.app !== SAVE_APP) throw new Error('Это не файл тренажёра');
+      const r = mergeSave(obj);
+      openSaveModal();
+      saveNote('Загружено: заездов +' + r.added + ', личных рекордов +' + r.recs + '.');
+    }catch(err){
+      openSaveModal();
+      saveNote(err.message || 'Файл не подошёл', true);
+    }
+  };
+  rd.readAsText(f);
+  this.value = '';
+});
+
+/* --- таблица лидеров --- */
+const BOARD_API = 'https://invoker-leaderboard.invoker-trainer.workers.dev';
+const escHtml = function(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+  });
+};
+let boardMode = 'race', boardBusy = false, boardLoaded = false, boardPending = false, delArmed = 0;
+
+function randHex(n){
+  const a = new Uint8Array(Math.ceil(n / 2));
+  crypto.getRandomValues(a);
+  return Array.from(a, function(b){ return b.toString(16).padStart(2, '0'); }).join('').slice(0, n);
+}
+function myToken(){
+  if(!CFG.boardToken || CFG.boardToken.length < 16){ CFG.boardToken = randHex(32); saveCfg(); }
+  return CFG.boardToken;
+}
+function myClient(){
+  if(!CFG.boardClient) { CFG.boardClient = randHex(16); saveCfg(); }
+  return CFG.boardClient;
+}
+function boardNote(text, bad){
+  const n = $('#boardNote');
+  n.textContent = text || '';
+  n.classList.toggle('err', !!bad);
+}
+function boardRender(items, you){
+  const box = $('#boardList');
+  if(!items.length && !you){
+    box.innerHTML = '<p class="board-empty">Пока пусто. Сыграй заезд — и стань первым.</p>';
+    if(!(CFG.nick || '').trim() && !$('#boardNote').textContent){
+      boardNote('Впиши ник — и твои результаты попадут в таблицу.');
+    }
+    return;
+  }
+  const me = (CFG.nick || '').trim().toLowerCase();
+  const rowHtml = function(r, rank, extra){
+    const top = rank <= 3 ? ' top' + rank : '';
+    const mine = me && String(r.nick).toLowerCase() === me ? ' me' : '';
+    return '<div class="board-row' + top + mine + (extra || '') + '">' +
+      '<span class="board-rank">' + rank + '</span>' +
+      '<span class="board-nick">' + escHtml(r.nick) + '</span>' +
+      '<span class="board-time">' + fmt(r.time) + ' с</span>' +
+      '<span class="board-err">' + (r.errors ? r.errors + ' ош.' : 'чисто') + '</span>' +
+      '</div>';
+  };
+  let html = items.map(function(r, i){ return rowHtml(r, i + 1); }).join('');
+  if(you && you.rank > items.length){
+    html += '<div class="board-sep">· · ·</div>' + rowHtml(you, you.rank, ' me');
+  }
+  box.innerHTML = html;
+  if(!(CFG.nick || '').trim() && !$('#boardNote').textContent){
+    boardNote('Впиши ник — и твои результаты попадут в таблицу.');
+  }
+}
+function boardLoad(keepNote){
+  if(boardBusy){ boardPending = true; return; }
+  boardBusy = true;
+  boardPending = false;
+  if(!boardLoaded) $('#boardList').innerHTML = '<p class="board-empty">Загрузка…</p>';
+  if(!keepNote) boardNote('');
+  const ctl = new AbortController();
+  const timer = setTimeout(function(){ ctl.abort(); }, 8000);
+  fetch(BOARD_API + '/api/board?mode=' + boardMode + '&limit=15' +
+        (CFG.nick ? '&nick=' + encodeURIComponent(CFG.nick) : ''),
+        { signal: ctl.signal, cache: 'no-store' })
+    .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(d){ boardLoaded = true; boardRender(d.items || [], d.you); })
+    .catch(function(){
+      boardNote('Таблица недоступна — проверь интернет.', true);
+      if(!boardLoaded) $('#boardList').innerHTML = '<p class="board-empty">Не удалось загрузить.</p>';
+    })
+    .then(function(){ clearTimeout(timer); boardBusy = false; if(boardPending) boardLoad(); });
+}
+function boardSubmit(mode, time, errors, presses){
+  const nick = (CFG.nick || '').trim();
+  if(!nick) return Promise.resolve(null);
+  return fetch(BOARD_API + '/api/score', {
+    method: 'POST',
+    cache: 'no-store',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      mode: mode, nick: nick, time: Math.round(time), errors: errors,
+      presses: presses, token: myToken(), clientId: myClient()
+    })
+  }).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
+}
+
+$$('#segBoard button').forEach(function(b){
+  b.addEventListener('click', function(){
+    boardMode = b.getAttribute('data-v');
+    boardLoaded = false;
+    $$('#segBoard button').forEach(function(x){ x.classList.toggle('on', x === b); });
+    boardLoad();
+  });
+});
+$('#btnBoardRefresh').addEventListener('click', function(){ boardLoaded = false; boardLoad(); });
+
+$('#nickInput').value = CFG.nick || '';
+function saveNick(){
+  CFG.nick = ($('#nickInput').value || '').replace(/\s+/g, ' ').trim().slice(0, 18);
+  $('#nickInput').value = CFG.nick;
+  saveCfg();
+  boardNote(CFG.nick ? 'Ник сохранён — результаты пойдут в таблицу.' : 'Ник пустой: результаты не отправляются.');
+  boardLoad();
+}
+$('#btnNickSave').addEventListener('click', saveNick);
+$('#nickInput').addEventListener('keydown', function(e){
+  if(e.code === 'Enter'){ e.preventDefault(); saveNick(); this.blur(); }
+});
+
+$('#btnBoardDelete').addEventListener('click', function(){
+  const btn = this;
+  if(!CFG.nick){ boardNote('Сначала задай ник.', true); return; }
+  const now = Date.now();
+  if(now - delArmed > 4500){
+    delArmed = now;
+    btn.textContent = 'точно удалить?';
+    setTimeout(function(){
+      if(Date.now() - delArmed >= 4500){ delArmed = 0; btn.textContent = 'удалить мои результаты'; }
+    }, 4600);
+    return;
+  }
+  delArmed = 0;
+  btn.textContent = 'удалить мои результаты';
+  fetch(BOARD_API + '/api/score', {
+    method: 'DELETE',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ nick: CFG.nick, token: myToken() })
+  })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      boardNote(d.deleted ? 'Результаты удалены.' : 'В таблице нечего удалять.', !d.deleted);
+      boardLoaded = false; boardLoad(true);
+    })
+    .catch(function(){ boardNote('Не удалось удалить.', true); });
+});
+
 /* --- сегменты настроек --- */
 function bindSeg(sel, apply){
   const seg = $(sel);
@@ -2114,6 +2514,13 @@ document.addEventListener('keydown', function(e){
   }
   if(e.repeat) return;
 
+  const typing = e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName || '');
+  if(!$('#saveModal').hidden){
+    if(e.code === 'Escape'){ e.preventDefault(); closeSaveModal(); }
+    return;
+  }
+  if(typing) return;
+
   const active = $$('.screen').filter(function(s){ return s.classList.contains('active'); })[0];
   const id = active ? active.id : '';
 
@@ -2151,7 +2558,8 @@ function paintOrbCaps(){
   });
   $('#btnInvoke').querySelector('kbd').textContent = keyLabel(CFG.binds.R);
 }
-renderSheet(); renderBinds(); paintOrbCaps(); renderHome(); paintSoundBtn(); decodeSamples();
+renderSheet(); renderBinds(); paintOrbCaps(); renderHome(); paintSoundBtn(); decodeSamples(); boardLoad();
 </script>
 </body>
+</html>
 </html>
