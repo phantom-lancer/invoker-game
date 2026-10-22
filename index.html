@@ -321,6 +321,8 @@ body{margin:0;background:var(--bg);color:var(--fg);
 .nick-input{width:150px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.35);
   color:var(--fg);font:600 12.5px/1 "Segoe UI",sans-serif;outline:none;transition:border-color .15s}
 .nick-input:focus{border-color:rgba(233,181,88,.55)}
+.board-acc{padding:8px 11px;border-radius:8px;border:1px solid rgba(233,181,88,.26);background:rgba(233,181,88,.07);
+  font:600 12.5px/1 "Segoe UI",sans-serif;color:var(--gold-lt);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .board-del{margin-left:auto;font-size:11px}
 @media (max-width:620px){ .board-err{display:none} .board-row{grid-template-columns:26px minmax(0,1fr) auto} }
 
@@ -669,9 +671,10 @@ body{margin:0;background:var(--bg);color:var(--fg);
       </div>
       <div class="board" id="boardList"><p class="board-empty">Загрузка…</p></div>
       <div class="board-foot">
-        <span class="board-lbl">Ник</span>
+        <span class="board-lbl" id="boardLbl">Ник</span>
         <input class="nick-input" id="nickInput" maxlength="18" placeholder="Игрок" autocomplete="off" spellcheck="false" aria-label="Ник в таблице">
         <button class="btn-mini" id="btnNickSave">Сохранить</button>
+        <span class="board-acc" id="boardAcc" hidden></span>
         <button class="link-btn board-del" id="btnBoardDelete">удалить мои результаты</button>
       </div>
       <p class="board-note" id="boardNote"></p>
@@ -2318,12 +2321,14 @@ $('#loadFile').addEventListener('change', function(){
 
 /* --- таблица лидеров --- */
 const BOARD_API = 'https://invoker-leaderboard.invoker-trainer.workers.dev';
+const ON_FOXHA = /(^|\.)foxha\.ru$/i.test(location.hostname);
 const escHtml = function(s){
   return String(s).replace(/[&<>"']/g, function(c){
     return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
   });
 };
 let boardMode = 'race', boardBusy = false, boardLoaded = false, boardPending = false, delArmed = 0;
+let FX = null, FX_FAIL = false;
 
 function randHex(n){
   const a = new Uint8Array(Math.ceil(n / 2));
@@ -2338,21 +2343,71 @@ function myClient(){
   if(!CFG.boardClient) { CFG.boardClient = randHex(16); saveCfg(); }
   return CFG.boardClient;
 }
+
+function foxhaWho(){
+  if(!ON_FOXHA) return Promise.resolve(null);
+  const ctl = new AbortController();
+  const timer = setTimeout(function(){ ctl.abort(); }, 4000);
+  return fetch('/api/auth/me', {
+    credentials: 'same-origin',
+    headers: { 'Accept': 'application/json' },
+    cache: 'no-store',
+    signal: ctl.signal
+  })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(u){
+      return u && u.id
+        ? { id: String(u.id), name: String(u.userName || u.displayName || '').trim() }
+        : null;
+    })
+    .catch(function(){ FX_FAIL = true; return null; })
+    .then(function(v){ clearTimeout(timer); return v; });
+}
+
+function boardIdentity(){
+  if(FX) return { uid: FX.id, nick: FX.name || 'Игрок' };
+  if(ON_FOXHA) return null;
+  const nick = (CFG.nick || '').trim();
+  return nick ? { uid: '', nick: nick } : null;
+}
+function boardMe(){
+  if(FX) return (FX.name || '').toLowerCase();
+  return (CFG.nick || '').trim().toLowerCase();
+}
+
 function boardNote(text, bad){
   const n = $('#boardNote');
   n.textContent = text || '';
   n.classList.toggle('err', !!bad);
 }
+function boardHint(force){
+  if(!force && $('#boardNote').textContent) return;
+  if(FX) return;
+  if(ON_FOXHA){
+    boardNote(FX_FAIL ? 'Не удалось проверить аккаунт Foxha — обнови страницу.' : 'Войди в аккаунт Foxha — результаты запишутся на него.', FX_FAIL);
+    return;
+  }
+  if(!(CFG.nick || '').trim()) boardNote('Впиши ник — и твои результаты попадут в таблицу.');
+}
+function paintIdentity(){
+  const lbl = $('#boardLbl'), inp = $('#nickInput'), sv = $('#btnNickSave'), acc = $('#boardAcc');
+  if(!lbl) return;
+  const nickOk = !ON_FOXHA && !FX;
+  lbl.textContent = (ON_FOXHA || FX) ? 'Аккаунт' : 'Ник';
+  inp.hidden = !nickOk;
+  sv.hidden = !nickOk;
+  acc.hidden = !FX;
+  if(FX) acc.textContent = '@' + (FX.name || 'аккаунт');
+}
+
 function boardRender(items, you){
   const box = $('#boardList');
   if(!items.length && !you){
     box.innerHTML = '<p class="board-empty">Пока пусто. Сыграй заезд — и стань первым.</p>';
-    if(!(CFG.nick || '').trim() && !$('#boardNote').textContent){
-      boardNote('Впиши ник — и твои результаты попадут в таблицу.');
-    }
+    boardHint();
     return;
   }
-  const me = (CFG.nick || '').trim().toLowerCase();
+  const me = boardMe();
   const rowHtml = function(r, rank, extra){
     const top = rank <= 3 ? ' top' + rank : '';
     const mine = me && String(r.nick).toLowerCase() === me ? ' me' : '';
@@ -2368,9 +2423,7 @@ function boardRender(items, you){
     html += '<div class="board-sep">· · ·</div>' + rowHtml(you, you.rank, ' me');
   }
   box.innerHTML = html;
-  if(!(CFG.nick || '').trim() && !$('#boardNote').textContent){
-    boardNote('Впиши ник — и твои результаты попадут в таблицу.');
-  }
+  boardHint();
 }
 function boardLoad(keepNote){
   if(boardBusy){ boardPending = true; return; }
@@ -2378,10 +2431,11 @@ function boardLoad(keepNote){
   boardPending = false;
   if(!boardLoaded) $('#boardList').innerHTML = '<p class="board-empty">Загрузка…</p>';
   if(!keepNote) boardNote('');
+  const id = boardIdentity();
+  const who = id ? (id.uid ? '&uid=' + encodeURIComponent(id.uid) : '&nick=' + encodeURIComponent(id.nick)) : '';
   const ctl = new AbortController();
   const timer = setTimeout(function(){ ctl.abort(); }, 8000);
-  fetch(BOARD_API + '/api/board?mode=' + boardMode + '&limit=15' +
-        (CFG.nick ? '&nick=' + encodeURIComponent(CFG.nick) : ''),
+  fetch(BOARD_API + '/api/board?mode=' + boardMode + '&limit=15' + who,
         { signal: ctl.signal, cache: 'no-store' })
     .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(d){ boardLoaded = true; boardRender(d.items || [], d.you); })
@@ -2392,15 +2446,16 @@ function boardLoad(keepNote){
     .then(function(){ clearTimeout(timer); boardBusy = false; if(boardPending) boardLoad(); });
 }
 function boardSubmit(mode, time, errors, presses){
-  const nick = (CFG.nick || '').trim();
-  if(!nick) return Promise.resolve(null);
+  const id = boardIdentity();
+  if(!id) return Promise.resolve(null);
   return fetch(BOARD_API + '/api/score', {
     method: 'POST',
     cache: 'no-store',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
-      mode: mode, nick: nick, time: Math.round(time), errors: errors,
-      presses: presses, token: myToken(), clientId: myClient()
+      mode: mode, nick: id.nick, uid: id.uid || undefined,
+      time: Math.round(time), errors: errors, presses: presses,
+      token: myToken(), clientId: myClient()
     })
   }).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
 }
@@ -2430,7 +2485,8 @@ $('#nickInput').addEventListener('keydown', function(e){
 
 $('#btnBoardDelete').addEventListener('click', function(){
   const btn = this;
-  if(!CFG.nick){ boardNote('Сначала задай ник.', true); return; }
+  const id = boardIdentity();
+  if(!id){ boardNote(ON_FOXHA ? 'Удалять можно только результаты аккаунта.' : 'Сначала задай ник.', true); return; }
   const now = Date.now();
   if(now - delArmed > 4500){
     delArmed = now;
@@ -2445,7 +2501,7 @@ $('#btnBoardDelete').addEventListener('click', function(){
   fetch(BOARD_API + '/api/score', {
     method: 'DELETE',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ nick: CFG.nick, token: myToken() })
+    body: JSON.stringify({ nick: id.nick, uid: id.uid || undefined, token: myToken() })
   })
     .then(function(r){ return r.json(); })
     .then(function(d){
@@ -2567,7 +2623,19 @@ function paintOrbCaps(){
   });
   $('#btnInvoke').querySelector('kbd').textContent = keyLabel(CFG.binds.R);
 }
-renderSheet(); renderBinds(); paintOrbCaps(); renderHome(); paintSoundBtn(); decodeSamples(); boardLoad();
+renderSheet(); renderBinds(); paintOrbCaps(); renderHome(); paintSoundBtn(); decodeSamples();
+paintIdentity(); boardLoad();
+foxhaWho().then(function(u){
+  if(u){
+    FX = u;
+    paintIdentity();
+    boardLoaded = false;
+    boardLoad();
+  } else {
+    paintIdentity();
+    boardHint(ON_FOXHA);
+  }
+});
 </script>
 </body>
 </html>
